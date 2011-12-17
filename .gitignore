@@ -1,0 +1,4 @@
+# git ignore file
+*.sln
+*.suo
+web.config
