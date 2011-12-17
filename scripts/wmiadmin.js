@@ -7,7 +7,8 @@
 	}
 	catch (e) { setTimeout_ = null; };
 
-	if (typeof (WScript) == "object") {
+	/* if WScript is object we are being started from the command line */
+	if (typeof (WScript) === "object") {
 		// Helper methods:
 		function ipToLong(ip) {
 			var a = parseInt(ip[0]);
@@ -48,7 +49,7 @@
 
 		var LOCAL_IP = "127.0.0.1", wmic = null, Args = WScript.Arguments;
 
-		if (!Args.length) {
+		if (Args.length < 1) {
 			wmic = new WMIcollector(LOCAL_IP, null, null, null, null, "all");
 		}
 		else {
@@ -82,7 +83,7 @@
 		}
 
 		wmic.RunQuery();
-	}
+	} /* eof comand line run mode */
 
 	GLOBAL.WMIcollector = function (ips, username, password, domain, kerberos, components,
 						component_start_callback, component_complete_callback,
@@ -92,6 +93,9 @@
 		// RunQuery - runs the query which this particular WMIcollector is set up to.
 		// Should be called without parameters.
 		this.RunQuery = function (prevIP) {
+
+			debugger;
+
 			var self = this;
 			if (!prevIP) {
 				if (this._callbacks[2])
@@ -99,8 +103,7 @@
 
 				setTimeout_(function () {
 					self._collectAll(self._ip[0]);
-				},
-	  100);
+				},100);
 				return;
 			}
 
@@ -118,8 +121,7 @@
 
 				setTimeout_(function () {
 					self._collectAll(cur_ip);
-				},
-	  100);
+				}, 100);
 			}
 			else {
 				// the end of query:
@@ -450,7 +452,7 @@
 		// _collectAll - starts the collection process for a given IP.
 		this._collectAll = function (ip) {
 
-			ip = (!!ip) || LOCAL_IP; // dbj added 2011-12-17
+			if (!!ip) throw "_collectAll() received no IP?"; // dbj added 2011-12-17
 
 			var xmlDoc = new ActiveXObject("Msxml2.DOMDocument");
 			var root = xmlDoc.createElement("Root");
@@ -464,7 +466,6 @@
 			this._xmlCreateChildTextNode(xmlDoc, meta, "Time", (dt.getHours() < 10 ? "0" + dt.getHours() : dt.getHours()) + ":" +
                                                  (dt.getMinutes() < 10 ? "0" + dt.getMinutes() : dt.getMinutes()) + ":" +
                                                  (dt.getSeconds() < 10 ? "0" + dt.getSeconds() : dt.getSeconds()));
-
 			var set = this._SetupService(ip);
 
 			if (set[0]) {
