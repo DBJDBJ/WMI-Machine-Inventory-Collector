@@ -2,6 +2,28 @@
 (function (GLOBAL, undefined) {
 	/*-----------------------------------------------------------------------------------------------------------*/
 
+	GLOBAL.computer_name = function () {
+		var wsh = new ActiveXObject("wscript.shell");
+		var env = wsh.Environment("Process");
+		var name_ = env("COMPUTERNAME");
+		wsh = env = null;
+		return name_;
+	}
+
+
+	var ip2file_ = {}; // dbj added
+	GLOBAL.ip2filename = function (ip) {
+		if (!!ip2file_[ip]) return ip2file_[ip];
+
+		var d = new Date();
+		d = "{0}-{1}-{2}-{3}-{4}-{5}".format(
+			d.getFullYear(), d.getMonth(), d.getDate(), d.getHours(), d.getMinutes(), d.getSeconds()
+		);
+
+		return ip2file_[ip] = "inventory-{2}-[{0}]-{1}.xml".format(ip, d, computer_name());
+	}
+	/*-----------------------------------------------------------------------------------------------------------*/
+
 	try {
 		var setTimeout_ = setTimeout || null;
 	}
@@ -258,7 +280,7 @@
 			xmlFile.Close();
 		}
 
-		function null_function () { };
+		function null_function() { };
 		// WMI setup & query routines:
 
 		this.init = function (ips, username, password, domain, kerberos, components,
@@ -277,7 +299,7 @@
 			this._kerberos = ((kerberos == undefined) || (kerberos == null)) ? false : kerberos;
 
 			this._components = [];
-			this._callbacks = [null_function,null_function,null_function, null_function, null_function];
+			this._callbacks = [null_function, null_function, null_function, null_function, null_function];
 
 			if (dbj.role.isString(ips)) {
 				if (ips == "") throw "init() received no IP's ?"
@@ -511,7 +533,7 @@
 
 					if (++listIndex == self.list.length) {
 						// We've reached the end - all info on this IP is collected.
-						var fname = "result-" + String(ip).replace(/\./g, "-") + ".xml";
+						var fname = ip2filename(ip); // dbj added
 						self._xmlWriteToFile(fname, doc);
 
 						if (self._callbacks[3])

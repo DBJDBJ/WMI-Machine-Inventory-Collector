@@ -20,6 +20,10 @@
 		<style type="text/css" media="all" >
 		html, body { font-family: Segoe UI, Arial, Tahoma;}
 		.help_text { font-size:xx-small; }
+
+		#resultsTable { width: 100%; border:1px solid; }
+		#resultsTable tr td { font-size:12px; color:#AAA; width:400px; text-align:left; }
+
 			.ip
 			{
 				width: 35px;
@@ -197,7 +201,14 @@
 				<input type="checkbox" id="kerberos">Use Kerberos authentication</input></br></br>
 			</div>
 
-			<div id="tab4"><input id="run_button" type="button" value="Run query" onclick="RunQuery(this)"></input></div>
+			<div id="tab4"><input id="run_button" type="button" value="Run query" onclick="RunQuery(this)"></input>
+			<table id="resultsTable">
+			<tr>
+			<th id="left"></th>
+			<th id="right"></th>
+			</tr>
+			</table>
+			</div>
 
 			<div id="tab5"><div id="about_div">
 <pre id="about_text">
@@ -239,6 +250,11 @@
 	/*-----------------------------------------------------------------------------------------*/
 (function (GLOBAL, undefined) {
 	/*-----------------------------------------------------------------------------------------*/
+	// jQ 1.3.2 has no toArray()
+	if (!dbj.role.isFunction(jQuery.fn.toArray))
+		jQuery.fn.toArray = function () {
+			return Array.prototype.slice.call(this, 0);
+		}
 
 	$(function () {
 		$("#tabContainer > ul").tabs();
@@ -349,12 +365,7 @@
 	/* Tab 4 functions: */
 
 	function OnComponentStart(cname) {
-		var table = document.getElementById("resultsTable");
-		var lastRow = table.rows[table.rows.length - 1];
-
-		lastRow.childNodes[1].innerHTML = cname;
-
-		table = lastRow = null; // dbj added
+		$("#resultsTable #right").html(cname);
 	}
 
 	function OnComponentComplete(cname) {
@@ -362,43 +373,17 @@
 	}
 
 	function OnIPStart(ip) {
-		var fname = "result-" + String(ip).replace(/\./g, "-") + ".xml";
-
-		var table = document.getElementById("resultsTable");
-		var lastRow = table.rows[table.rows.length - 1];
-
-		lastRow.firstChild.innerHTML = fname;
-
-		fname = table = lastRow = null; // dbj added
+		$("#resultsTable #left").html(ip2filename(ip));
+		$("#resultsTable #right").html("");
 	}
 
 	function OnIPComplete(fname) {
-
-		var table = document.getElementById("resultsTable");
-		var lastRow = table.rows[table.rows.length - 1];
-
-		lastRow.firstChild.innerHTML = (fname.substr(fname.length - 4) == ".xml") ? ("<a href=\"" + fname + "\">" + fname + "</a>") : fname;
-		lastRow.childNodes[1].innerHTML = "";
-
-		var row = table.insertRow(-1);
-
-		var cell = row.insertCell(-1);
-		cell.style.align = "left";
-		cell.style.fontsize = "12px";
-		cell.style.color = "#AAA";
-		cell.style.width = "300px";
-
-		cell = row.insertCell(-1);
-		cell.style.align = "left";
-		cell.style.fontsize = "12px";
-		cell.style.color = "#AAA";
-
-		table = lastRow = row = cell = null; // dbj added
+		$("#resultsTable #left").html("<a href='{0}' >{1}</a>".format(fname, fname));
+		$("#resultsTable #right").html("");
 	}
 
 	function OnFinish() {
-
-		document.getElementById("run_button").setAttribute("disabled", false);
+		$("#run_button").attr("disabled", false);
 	}
 
 	/* several helper methods: */
@@ -433,86 +418,46 @@
 		return [a, b, c, d];
 	}
 
+
 	function getChildInputs(div) {
-		var array = [];
-		var len = div.childNodes.length;
-
-		for (var i = 0; i < len; i++) {
-			var child = div.childNodes[i];
-			if (child.tagName && (child.tagName.toLowerCase() == "input")) {
-				array[array.length] = child;
-			}
-		}
-
-		return array;
+		return $(div).find("input").toArray();
 	}
 
 	function getChildCheckboxes(div) {
+		/*
 		var array = [];
 		var len = div.childNodes.length;
 
 		for (var i = 0; i < len; i++) {
-			var child = div.childNodes[i];
+		var child = div.childNodes[i];
 
-			if (child.tagName && (child.tagName.toLowerCase() == "input") &&
-								(child.type.toLowerCase() == "checkbox") && child.getAttribute("checked")) {
-				array[array.length] = child;
-			}
-			else {
-				if (child.childNodes.length) {
-					var arr = getChildCheckboxes(child);
-					if (arr.length) array = array.concat(arr);
-				}
-			}
+		if (child.tagName && (child.tagName.toLowerCase() == "input") &&
+		(child.type.toLowerCase() == "checkbox") && child.getAttribute("checked")) {
+		array[array.length] = child;
+		}
+		else {
+		if (child.childNodes.length) {
+		var arr = getChildCheckboxes(child);
+		if (arr.length) array = array.concat(arr);
+		}
+		}
 		}
 
 		return array;
+		*/
+		return $(div).find("input[@type=checkbox]:checked").toArray();
 	}
 
 	GLOBAL.RunQuery = function (button) {
 
 		button.setAttribute("disabled", true);
 
-		var node = button.parentNode;
-		while (node.childNodes.length > 1)
-			node.removeChild(node.lastChild);
-
-		var hr = document.createElement("hr");
-		hr.setAttribute("align", "left");
-		hr.setAttribute("width", "50%");
-		node.appendChild(hr);
-
-		var dv = document.createElement("div");
-		dv.style.width = "100%";
-
-		var table = document.createElement("table");
-		dv.appendChild(table);
-		node.appendChild(dv);
-
-		table.style.width = "100%";
-		table.style.border = "1px solid"
-		table.id = "resultsTable";
-
-		var row = table.insertRow(-1);
-
-		var cell = row.insertCell(-1);
-		cell.style.align = "left";
-		cell.style.fontsize = "12px";
-		cell.style.color = "#AAA";
-		cell.style.width = "300px";
-
-		cell = row.insertCell(-1);
-		cell.style.align = "left";
-		cell.style.fontsize = "12px";
-		cell.style.color = "#AAA";
-
 		// Calculate required IPs:
 		var arrayOfIPs = [];
 
 		var tab1 = document.getElementById("tab1");
-		var len1 = tab1.childNodes.length;
 
-		for (var i = 0; i < len1; i++) {
+		for (var len1 = tab1.childNodes.length, i = 0; i < len1; i++) {
 			var child = tab1.childNodes[i];
 			if (child.tagName && (child.tagName.toLowerCase() == "div") && child.id && (child.id.indexOf("range") != -1)) {
 				var ips = getChildInputs(child.firstChild);
@@ -552,13 +497,25 @@
 		}
 
 		var checks = getChildCheckboxes(document.getElementById("tab2"));
-		var components = [];
-		var len2 = checks.length;
 
-		for (i = 0; i < len2; i++) {
-			var name = checks[i].name;
+		if (!checks || checks.length < 1) {
+			alert("No system components selected for making a inventory.");
+			button.setAttribute("disabled", false);
+			return;
+		}
+
+		var components = [];
+
+		for (var name, i = 0, len2 = checks.length; i < len2; i++) {
+			name = checks[i].name;
 			if (name && name.length)
 				components[components.length] = name;
+		}
+
+		if ( components.length < 1) {
+			alert("No system components selected for making a inventory.");
+			button.setAttribute("disabled", false);
+			return;
 		}
 
 		var username = document.getElementById("login");
