@@ -94,8 +94,6 @@
 		// Should be called without parameters.
 		this.RunQuery = function (prevIP) {
 
-			debugger;
-
 			var self = this;
 			if (!prevIP) {
 				if (this._callbacks[2])
@@ -103,7 +101,7 @@
 
 				setTimeout_(function () {
 					self._collectAll(self._ip[0]);
-				},100);
+				}, 100);
 				return;
 			}
 
@@ -133,26 +131,7 @@
 		// String helper functions:
 
 		this._trim = function (src) {
-			var str_src = String(src);
-
-			// Leading spaces:
-			var empty = true;
-			for (var l = 0; l < str_src.length; l++) {
-				if (str_src.charAt(l) != " ") {
-					empty = false;
-					break;
-				}
-			}
-
-			if (empty) return "";
-
-			// Trailing spaces:
-			for (var t = str_src.length - 1; t >= 0; t--) {
-				if (str_src.charAt(t) != " ")
-					break;
-			}
-
-			return str_src.substring(l, t + 1);
+			return src.trim(); // using dbj.lib 
 		}
 
 		this._isempty = function (str) {
@@ -279,6 +258,7 @@
 			xmlFile.Close();
 		}
 
+		function null_function () { };
 		// WMI setup & query routines:
 
 		this.init = function (ips, username, password, domain, kerberos, components,
@@ -297,42 +277,42 @@
 			this._kerberos = ((kerberos == undefined) || (kerberos == null)) ? false : kerberos;
 
 			this._components = [];
-			this._callbacks = [];
+			this._callbacks = [null_function,null_function,null_function, null_function, null_function];
 
-			if (typeof (ips) == "string") {
+			if (dbj.role.isString(ips)) {
 				if (ips == "") throw "init() received no IP's ?"
 				this._ip[0] = ips;
 			}
-			else {
-				if (ips.constructor == Array) {
-					if (ips.length < 1) throw "init() received no IP's ?"
-					this._ip = this._removeDuplicates(ips);
-				}
+			else if (dbj.role.isArray(ips)) {
+				if (ips.length < 1) throw "init() received no IP's ?"
+				this._ip = this._removeDuplicates(ips);
+			} else {
+				throw "init() received illegal type for IP's ?";
 			};
 
-			if (components) {
-				if (typeof (components) == "string")
+			if (!!components) {
+				if (dbj.role.isString(components))
 					this._components[0] = components;
 				else {
-					if (components.constructor == Array) {
+					if (dbj.role.isArray(components)) {
 						this._components = this._removeDuplicates(components);
 					}
 				}
 			}
 
-			if (component_start_callback)
+			if (dbj.role.isFunction(component_start_callback))
 				this._callbacks[0] = component_start_callback;
 
-			if (component_complete_callback)
+			if (dbj.role.isFunction(component_complete_callback))
 				this._callbacks[1] = component_complete_callback;
 
-			if (ip_start_callback)
+			if (dbj.role.isFunction(ip_start_callback))
 				this._callbacks[2] = ip_start_callback;
 
-			if (ip_complete_callback)
+			if (dbj.role.isFunction(ip_complete_callback))
 				this._callbacks[3] = ip_complete_callback;
 
-			if (finish_callback)
+			if (dbj.role.isFunction(finish_callback))
 				this._callbacks[4] = finish_callback;
 
 			// List of all the components that can be queried. Format:
@@ -452,7 +432,7 @@
 		// _collectAll - starts the collection process for a given IP.
 		this._collectAll = function (ip) {
 
-			if (!!ip) throw "_collectAll() received no IP?"; // dbj added 2011-12-17
+			if (!!!ip) throw "_collectAll() received no IP?"; // dbj added 2011-12-17
 
 			var xmlDoc = new ActiveXObject("Msxml2.DOMDocument");
 			var root = xmlDoc.createElement("Root");
@@ -462,10 +442,8 @@
 			this._xmlCreateChildTextNode(xmlDoc, meta, "IP", ip);
 
 			var dt = new Date();
-			this._xmlCreateChildTextNode(xmlDoc, meta, "Date", (dt.getMonth() + 1) + "/" + dt.getDate() + "/" + dt.getFullYear());
-			this._xmlCreateChildTextNode(xmlDoc, meta, "Time", (dt.getHours() < 10 ? "0" + dt.getHours() : dt.getHours()) + ":" +
-                                                 (dt.getMinutes() < 10 ? "0" + dt.getMinutes() : dt.getMinutes()) + ":" +
-                                                 (dt.getSeconds() < 10 ? "0" + dt.getSeconds() : dt.getSeconds()));
+			this._xmlCreateChildTextNode(xmlDoc, meta, "Date", dt.toLocaleDateString());
+			this._xmlCreateChildTextNode(xmlDoc, meta, "Time", dt.toLocaleTimeString());
 			var set = this._SetupService(ip);
 
 			if (set[0]) {
@@ -477,6 +455,8 @@
 
 				this.RunQuery(ip);
 			}
+
+			xmlDoc = root = meta = dt = set = null; // dbj added
 		}
 
 		// _collectComponent - collects info on a given component, and continues this process.

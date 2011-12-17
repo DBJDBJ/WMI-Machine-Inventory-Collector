@@ -578,7 +578,10 @@
 				OnIPStart,
 				OnIPComplete, OnFinish);
 
-		setTimeout(function () { wmic.RunQuery(); }, 100);
+		setTimeout(function () {
+			wmic.RunQuery();
+			wmic = null; // dbj added
+		}, 100);
 	}
 	/*-----------------------------------------------------------------------------------------*/
 } (this));
