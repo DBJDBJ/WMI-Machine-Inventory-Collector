@@ -2,27 +2,55 @@
 (function (GLOBAL, undefined) {
 	/*-----------------------------------------------------------------------------------------------------------*/
 
-	GLOBAL.computer_name = function () {
-		var wsh = new ActiveXObject("wscript.shell");
-		var env = wsh.Environment("Process");
-		var name_ = env("COMPUTERNAME");
-		wsh = env = null;
-		return name_;
-	}
+	GLOBAL.util = (function () {
+		var ip2file_ = {}; // dbj added
 
+		return {
+			"LOCAL_IP": "127.0.0.1", 
+			null_function : function () { },
+			computer_name: function () {
+				var wsh = new ActiveXObject("wscript.shell"),
+				env = wsh.Environment("Process"),
+				name_ = env("COMPUTERNAME");
+				wsh = env = null;
+				return name_;
+			},
+			ip2filename: function (ip) {
+				if (!!ip2file_[ip]) return ip2file_[ip];
 
-	var ip2file_ = {}; // dbj added
-	GLOBAL.ip2filename = function (ip) {
-		if (!!ip2file_[ip]) return ip2file_[ip];
-
-		var d = new Date();
-		d = "{0}-{1}-{2}-{3}-{4}-{5}".format(
+				var d = new Date();
+				d = "{0}-{1}-{2}-{3}-{4}-{5}".format(
 			d.getFullYear(), d.getMonth(), d.getDate(), d.getHours(), d.getMinutes(), d.getSeconds()
 		);
 
-		return ip2file_[ip] = "inventory-{2}-[{0}]-{1}.xml".format(ip, d, computer_name());
-	}
-	/*-----------------------------------------------------------------------------------------------------------*/
+				return ip2file_[ip] = "inventory-{2}-[{0}]-{1}.xml".format(ip, d, util.computer_name());
+			},
+			ipToLong: function (ip) {
+				var a = parseInt(ip[0]);
+				var b = parseInt(ip[1]);
+				var c = parseInt(ip[2]);
+				var d = parseInt(ip[3]);
+
+				return d + (256 * c) + (256 * 256 * b) + (256 * 256 * 256 * a);
+			},
+			longToIp: function (long) {
+				var a = "", b = "", c = "", d = "";
+
+				for (var i = 3; i >= 0; i--) {
+					var n = parseInt(long / Math.pow(256, i));
+					long -= parseInt(long / Math.pow(256, i)) * Math.pow(256, i);
+
+					switch (i) {
+						case 3: a = n; break;
+						case 2: b = n; break;
+						case 1: c = n; break;
+						case 0: d = n; break;
+					}
+				}
+				return [a, b, c, d];
+			}
+		};
+	} ());
 
 	try {
 		var setTimeout_ = setTimeout || null;
@@ -31,36 +59,6 @@
 
 	/* if WScript is object we are being started from the command line */
 	if (typeof (WScript) === "object") {
-		// Helper methods:
-		function ipToLong(ip) {
-			var a = parseInt(ip[0]);
-			var b = parseInt(ip[1]);
-			var c = parseInt(ip[2]);
-			var d = parseInt(ip[3]);
-
-			return d + (256 * c) + (256 * 256 * b) + (256 * 256 * 256 * a);
-		}
-
-		function longToIp(long) {
-			var a = "";
-			var b = "";
-			var c = "";
-			var d = "";
-
-			for (var i = 3; i >= 0; i--) {
-				var n = parseInt(long / Math.pow(256, i));
-				long -= parseInt(long / Math.pow(256, i)) * Math.pow(256, i);
-
-				switch (i) {
-					case 3: a = n; break;
-					case 2: b = n; break;
-					case 1: c = n; break;
-					case 0: d = n; break;
-				}
-			}
-
-			return [a, b, c, d];
-		}
 
 		if (!setTimeout_) {
 			setTimeout_ = function (method, timeout) {
@@ -69,10 +67,10 @@
 			}
 		}
 
-		var LOCAL_IP = "127.0.0.1", wmic = null, Args = WScript.Arguments;
+		var wmic = null, Args = WScript.Arguments;
 
 		if (Args.length < 1) {
-			wmic = new WMIcollector(LOCAL_IP, null, null, null, null, "all");
+			wmic = new WMIcollector( util.LOCAL_IP, null, null, null, null, "all");
 		}
 		else {
 			var ArgsNamed = Args.Named, ArgsUnnamed = Args.Unnamed;
@@ -90,16 +88,16 @@
 				if (ip.length && (ip.indexOf("-") != -1)) {
 					// This is a IP range.
 					var range = ip.split("-");
-					var startIP = ipToLong(range[0].split("."));
-					var endIP = ipToLong(range[1].split("."));
+					var startIP = util.ipToLong(range[0].split("."));
+					var endIP = util.ipToLong(range[1].split("."));
 
 					for (var i = startIP; i <= endIP; i++)
-						ips[ips.length] = longToIp(i).join(".");
+						ips[ips.length] = util.longToIp(i).join(".");
 				}
 				else ips[ips.length] = ip; // single IP address
 			}
 
-			if (ips.length < 1) ips[0] = LOCAL_IP;
+			if (ips.length < 1) ips[0] = util.LOCAL_IP;
 
 			wmic = new WMIcollector(ips, username, password, domain, secure, components);
 		}
@@ -280,7 +278,6 @@
 			xmlFile.Close();
 		}
 
-		function null_function() { };
 		// WMI setup & query routines:
 
 		this.init = function (ips, username, password, domain, kerberos, components,
@@ -299,7 +296,7 @@
 			this._kerberos = ((kerberos == undefined) || (kerberos == null)) ? false : kerberos;
 
 			this._components = [];
-			this._callbacks = [null_function, null_function, null_function, null_function, null_function];
+			this._callbacks = [util.null_function, util.null_function, util.null_function, util.null_function, util.null_function];
 
 			if (dbj.role.isString(ips)) {
 				if (ips == "") throw "init() received no IP's ?"
@@ -533,7 +530,7 @@
 
 					if (++listIndex == self.list.length) {
 						// We've reached the end - all info on this IP is collected.
-						var fname = ip2filename(ip); // dbj added
+						var fname = util.ip2filename(ip); // dbj added
 						self._xmlWriteToFile(fname, doc);
 
 						if (self._callbacks[3])
