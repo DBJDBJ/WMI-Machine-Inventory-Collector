@@ -6,14 +6,38 @@
 		var ip2file_ = {}; // dbj added
 
 		return {
-			"LOCAL_IP": "127.0.0.1", 
-			null_function : function () { },
+			"LOCAL_IP": "127.0.0.1",
+			null_function: function () { },
+/*
 			computer_name: function () {
 				var wsh = new ActiveXObject("wscript.shell"),
 				env = wsh.Environment("Process"),
 				name_ = env("COMPUTERNAME");
 				wsh = env = null;
 				return name_;
+			},
+*/
+			ip2computername: function (ip, username, password, domain, kerberos) {
+				var locator, service, items ;
+				try {
+					if (ip === null) {
+						ip = util.LOCAL_IP;
+						username = password = domain = "";
+					}
+					var locator = new ActiveXObject("WbemScripting.SWbemLocator");
+					var service = locator.ConnectServer(ip, "root\\cimv2", username, password, "",
+							domain ? (kerberos ? ("kerberos:" + domain) : ("NTLMDOMAIN:" + domain)) : "");
+					service.Security_.ImpersonationLevel = 3; // == Impersonate
+					items = service.ExecQuery("Select * from Win32_ComputerSystem");
+					var e = new Enumerator(items);
+					e.moveFirst();
+					return e.item().Name ;
+				}
+				catch (x) {
+					throw "Exception from ip2computername(): " + x ;
+				} finally {
+					locator = service = items = null;
+				}
 			},
 			ip2filename: function (ip) {
 				if (!!ip2file_[ip]) return ip2file_[ip];
@@ -23,7 +47,7 @@
 			d.getFullYear(), d.getMonth(), d.getDate(), d.getHours(), d.getMinutes(), d.getSeconds()
 		);
 
-				return ip2file_[ip] = "inventory-{2}-[{0}]-{1}.xml".format(ip, d, util.computer_name());
+				return ip2file_[ip] = "inventory-{2}-[{0}]-{1}.xml".format(ip, d, util.ip2computername());
 			},
 			ipToLong: function (ip) {
 				var a = parseInt(ip[0]);
@@ -70,7 +94,7 @@
 		var wmic = null, Args = WScript.Arguments;
 
 		if (Args.length < 1) {
-			wmic = new WMIcollector( util.LOCAL_IP, null, null, null, null, "all");
+			wmic = new WMIcollector(util.LOCAL_IP, null, null, null, null, "all");
 		}
 		else {
 			var ArgsNamed = Args.Named, ArgsUnnamed = Args.Unnamed;
@@ -458,6 +482,7 @@
 			xmlDoc.appendChild(root);
 
 			var meta = this._xmlCreateChildNode(xmlDoc, root, "Metadata");
+			this._xmlCreateChildTextNode(xmlDoc, meta, "Machine", util.ip2computername(ip, this._username, this._password, this._domain, this._kerberos ));
 			this._xmlCreateChildTextNode(xmlDoc, meta, "IP", ip);
 
 			var dt = new Date();
