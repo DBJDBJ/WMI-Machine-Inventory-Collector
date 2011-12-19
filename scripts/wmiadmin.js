@@ -567,8 +567,7 @@
 				}
 
 				self._collectComponent(doc, root, listIndex, componentIndex, ip);
-			},
-	100);
+			},100);
 		}
 
 		// doQuery - does a single component query.
