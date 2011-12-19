@@ -8,17 +8,17 @@
 		return {
 			"LOCAL_IP": "127.0.0.1",
 			null_function: function () { },
-/*
+			/*
 			computer_name: function () {
-				var wsh = new ActiveXObject("wscript.shell"),
-				env = wsh.Environment("Process"),
-				name_ = env("COMPUTERNAME");
-				wsh = env = null;
-				return name_;
+			var wsh = new ActiveXObject("wscript.shell"),
+			env = wsh.Environment("Process"),
+			name_ = env("COMPUTERNAME");
+			wsh = env = null;
+			return name_;
 			},
-*/
+			*/
 			ip2computername: function (ip, username, password, domain, kerberos) {
-				var locator, service, items ;
+				var locator, service, items;
 				try {
 					if (ip === null) {
 						ip = util.LOCAL_IP;
@@ -31,10 +31,10 @@
 					items = service.ExecQuery("Select * from Win32_ComputerSystem");
 					var e = new Enumerator(items);
 					e.moveFirst();
-					return e.item().Name ;
+					return e.item().Name;
 				}
 				catch (x) {
-					throw "Exception from ip2computername(): " + x ;
+					throw "Exception from ip2computername(): " + x;
 				} finally {
 					locator = service = items = null;
 				}
@@ -482,7 +482,7 @@
 			xmlDoc.appendChild(root);
 
 			var meta = this._xmlCreateChildNode(xmlDoc, root, "Metadata");
-			this._xmlCreateChildTextNode(xmlDoc, meta, "Machine", util.ip2computername(ip, this._username, this._password, this._domain, this._kerberos ));
+			this._xmlCreateChildTextNode(xmlDoc, meta, "Machine", util.ip2computername(ip, this._username, this._password, this._domain, this._kerberos));
 			this._xmlCreateChildTextNode(xmlDoc, meta, "IP", ip);
 
 			var dt = new Date();
@@ -567,7 +567,7 @@
 				}
 
 				self._collectComponent(doc, root, listIndex, componentIndex, ip);
-			},100);
+			}, 100);
 		}
 
 		// doQuery - does a single component query.
@@ -600,13 +600,13 @@
 					var root, num = "";
 					if (colItem) {
 						root = xmlDoc.createElement("Element");
-						num = " " + String(i);
+						num = ("" + i++).lpad(3, "0");// using dbj lib
 					}
 					else {
 						root = xmlDoc.createElement("Item");
 					}
 
-					this._xmlSetAttribute(xmlDoc, root, "name", singular + String(num));
+					this._xmlSetAttribute(xmlDoc, root, "name", singular + " " + num);
 					if (colItem) {
 						colItem.appendChild(root);
 					}
