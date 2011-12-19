@@ -445,17 +445,27 @@
 
 		this._SetupService = function (ip) {
 			if (!this._service[ip]) {
-				try {
-					var locator = new ActiveXObject("WbemScripting.SWbemLocator");
+                var locator = null, THAT = this;
+                try {
+                    locator = new ActiveXObject("WbemScripting.SWbemLocator");
 
-					this._service[ip] = locator.ConnectServer(ip, "root\\cimv2", this._username, this._password, "",
+                    this._service[ip] = locator.ConnectServer(ip, "root\\cimv2", this._username, this._password, "",
 							this._domain ? (this._kerberos ? ("kerberos:" + this._domain) : ("NTLMDOMAIN:" + this._domain)) : "");
+                    this._service[ip].Security_.ImpersonationLevel = 3; // == Impersonate
 
-					this._service[ip].Security_.ImpersonationLevel = 3; // == Impersonate
-				}
-				catch (err) {
-					return [false, err.description];
-				}
+                    $(window).bind("beforeunload", function () {
+                        if (!!THAT._service[ip]) {
+                            alert("Disconnecting from:" + ip);
+                            THAT._service[ip] = null;
+                        }
+                    })
+
+                }
+                catch (err) {
+                    return [false, err.description];
+                } finally {
+                    locator = null;
+                }
 			}
 
 			this._curserv = this._service[ip];
