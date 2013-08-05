@@ -1,11 +1,12 @@
-
 WMI Machine Inventory Collector
+-------------------------------
 
    Original: April 28th, 2009. v.2.2.
    http://www.codeproject.com/KB/scripting/wmiadmin.aspx
    Copyright (c) 2006-2009 by Dmitriy Khudorozhkov
 
-   Improvements Copyright (c) 2009-2011 Dusan Jovanovic
+   Improvements Copyright (c) 2009-2011 dbj
+   ========================================
 
    This software is provided "as-is", without any express or implied warranty.
    In no event will the author be held liable for any damages arising from the
