@@ -1,11 +1,11 @@
-WMI Machine Inventory Collector
--------------------------------
+#WMI Machine Inventory Collector
+###[http://dbjdbj.github.io/WMI-Machine-Inventory-Collector/](http://dbjdbj.github.io/WMI-Machine-Inventory-Collector/)
+###Improvements Copyright (c) 2009-2011 dbj   
 
    Original: April 28th, 2009. v.2.2.  
    http://www.codeproject.com/KB/scripting/wmiadmin.aspx   
    Copyright (c) 2006-2009 by Dmitriy Khudorozhkov   
 
-   Improvements Copyright (c) 2009-2011 dbj   
    ========================================   
 
    This software is provided "as-is", without any express or implied warranty.  
