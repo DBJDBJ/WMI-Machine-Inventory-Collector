@@ -297,6 +297,7 @@
 
 			xmlFile.WriteLine("<?xml version=\"1.0\" encoding=\"" + encoding + "\"?>");
 			xmlFile.WriteLine("<?xml-stylesheet type=\"text/xsl\" href=\"wmi_admin.xsl\"?>");
+            xmlFile.WriteLine("<!----- (c) by DBJ.Systems Ltd https://dbj.systems ---------->")
 			xmlFile.Write(writer.output);
 
 			xmlFile.Close();

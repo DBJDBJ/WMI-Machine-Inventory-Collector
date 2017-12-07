@@ -9,7 +9,9 @@
       h1   {margin-bottom:5px;}
       h3   {margin-bottom:0px;}
     </style>
-    <body><center>
+    <body>
+      <h3>&copy; by <a href="https://dbj.systems" target="_blank">DBJ.Systems Ltd</a></h3>
+      <center>
 
       <xsl:apply-templates/>
 
